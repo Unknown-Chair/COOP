@@ -76,7 +76,7 @@ function createRelay(opts = {}) {
 
   const server = http.createServer((req, res) => {
     const send = (c, o) => { res.writeHead(c, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(o)); };
-    if (req.method === 'GET' && req.url.startsWith('/health')) return send(200, { ok: true, sessions: sessions.size });
+    if (req.method === 'GET' && req.url.startsWith('/health')) return send(200, { ok: true, sessions: sessions.size, keyed: !!requiredKey });
     if (req.method !== 'POST') return send(404, { error: 'not found' });
     if (requiredKey && req.headers['x-relay-key'] !== requiredKey) return send(403, { error: 'unauthorized' });
     let body = '';
