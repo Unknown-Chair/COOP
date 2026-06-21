@@ -26,7 +26,16 @@ function createRelay(opts = {}) {
   // every POST must present it via the x-relay-key header. Strangers without the
   // key (which ships only inside the mod build you give friends) are rejected and
   // can't even create a session. /health stays open (Render's checks need it).
-  const requiredKey = opts.key || process.env.RELAY_KEY || null;
+  const requiredKey = (function resolveKey() {
+    if (opts.key) return opts.key;
+    if (process.env.RELAY_KEY && process.env.RELAY_KEY.trim()) return process.env.RELAY_KEY.trim();
+    // also accept a Render "Secret File" named RELAY_KEY (file on disk, not an env var)
+    const fs = require('fs');
+    for (const p of ['/etc/secrets/RELAY_KEY', './RELAY_KEY', require('path').join(process.cwd(), 'RELAY_KEY')]) {
+      try { const s = fs.readFileSync(p, 'utf8').trim(); if (s) return s; } catch (_) {}
+    }
+    return null;
+  })();
   const sessions = new Map(); // code -> { players: Map<netID,{queue:[],last:Map,lastSeen}>, touched }
   let seq = 0;
 
