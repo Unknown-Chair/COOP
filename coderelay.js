@@ -22,6 +22,11 @@ function createRelay(opts = {}) {
   // can't linger as a frozen phantom avatar or hydrate late joiners. Bridges
   // POST every ~80ms, so 12s tolerates real network hiccups without dropping live players.
   const playerTtl = opts.playerTtlMs || 12000;
+  // Optional friends-only gate: if a key is configured (RELAY_KEY env on the host),
+  // every POST must present it via the x-relay-key header. Strangers without the
+  // key (which ships only inside the mod build you give friends) are rejected and
+  // can't even create a session. /health stays open (Render's checks need it).
+  const requiredKey = opts.key || process.env.RELAY_KEY || null;
   const sessions = new Map(); // code -> { players: Map<netID,{queue:[],last:Map,lastSeen}>, touched }
   let seq = 0;
 
@@ -73,6 +78,7 @@ function createRelay(opts = {}) {
     const send = (c, o) => { res.writeHead(c, { 'content-type': 'application/json', 'access-control-allow-origin': '*' }); res.end(JSON.stringify(o)); };
     if (req.method === 'GET' && req.url.startsWith('/health')) return send(200, { ok: true, sessions: sessions.size });
     if (req.method !== 'POST') return send(404, { error: 'not found' });
+    if (requiredKey && req.headers['x-relay-key'] !== requiredKey) return send(403, { error: 'unauthorized' });
     let body = '';
     req.on('data', d => { body += d; if (body.length > 1e6) req.destroy(); });
     req.on('end', () => {
