@@ -1,0 +1,10 @@
+# Render Blueprint — deploy the relay as a free web service.
+# Render injects $PORT automatically; the relay reads it. /health is a 200 OK.
+services:
+  - type: web
+    name: votv-coop-relay
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node coderelay.js
+    healthCheckPath: /health

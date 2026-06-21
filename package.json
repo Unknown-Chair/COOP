@@ -1,0 +1,12 @@
+{
+  "name": "votv-coop-relay",
+  "version": "1.0.0",
+  "description": "Voices of the Void co-op join-code relay (public, zero-setup for players)",
+  "main": "coderelay.js",
+  "scripts": {
+    "start": "node coderelay.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
