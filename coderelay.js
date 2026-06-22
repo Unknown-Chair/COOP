@@ -61,13 +61,18 @@ function createRelay(opts = {}) {
     // cache last position per sender so a late joiner is hydrated
     const p = s.players.get(senderId);
     if (p && msg.type === 'POS') p.lastPos = msg;
+    if (p && msg.type === 'STATE') p.lastState = msg;   // host-authoritative state; hydrate late joiners
     for (const [id, pl] of s.players) if (id !== senderId) pl.queue.push(msg);
   }
 
   function snapshot(code, forId) {
     const s = sessions.get(code); if (!s) return [];
     const out = [];
-    for (const [id, pl] of s.players) if (id !== forId && pl.lastPos) out.push(pl.lastPos);
+    for (const [id, pl] of s.players) {
+      if (id === forId) continue;
+      if (pl.lastPos) out.push(pl.lastPos);
+      if (pl.lastState) out.push(pl.lastState);
+    }
     return out;
   }
 
